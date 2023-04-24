@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+coloredlogs = "*"
+click = "*"
+openai = "*"
+shellingham = "*"
+jinja2 = "*"
+pygments = "*"
+psutil = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3"
