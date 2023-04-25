@@ -34,8 +34,6 @@ Write code:
 Explain code:
 `$ cat translator.pl | lm -t explain`
 
-```
-
 ---
 
 ### Quickstart for `fish` heads
