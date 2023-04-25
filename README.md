@@ -19,6 +19,25 @@ It's another CLI interface for OpenAI's ChatGPT with a couple bells and whistles
 
 ---
 
+### Example use:
+
+Talk to ChatGPT:
+`$ lm "What is the meaning of life?"`
+
+Generate a git commit message:
+`$ echo "$(git diff HEAD | sed 1,2d)" | lm -t commit --no-context`
+
+Write code:
+`$ lm -x "write a Java program that displays the current time"`
+`$ lm -t code -x "Perl program that translate C to Pascal" > translator.pl`
+
+Explain code:
+`$ cat translator.pl | lm -t explain`
+
+```
+
+---
+
 ### Quickstart for `fish` heads
 
 The instructions will make the following commands (functions) available:
