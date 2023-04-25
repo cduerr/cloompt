@@ -3,7 +3,7 @@ import os
 import random
 import sys
 import logging
-import readline  # noqa - this is used implicitly by input()
+import readline  # noqa
 
 from config import (
     OPENAI_DEFAULT_MODEL,
@@ -115,7 +115,7 @@ def lm(
     prompt,
 ):
     """cloompt - the cli proompter"""
-    prompt = prompt.strip() if prompt else ""
+    prompt = prompt.strip() if (prompt and not no_proompt) else ""
     style = style or DEFAULT_PYGMENTS_STYLE
     no_color = no_color if sys.stdout.isatty() else True
     contextual = (contextual and not no_context) or interactive
@@ -158,11 +158,12 @@ def lm(
     if contextual:
         dialog.extend(context_load())
 
-    # Load the user prompt prefix/suffix (prompt_template)
-    if not no_proompt:
-        dialog.append({"role": "system", "content": get_system_prompt(prompt_template)})
+    # Load the prompt templates (proompts)
     user_prefix_prompt = get_user_prefix_prompt(prompt_template)
     user_postfix_prompt = get_user_postfix_prompt(prompt_template)
+    system_prompt = get_system_prompt(prompt_template or "system")
+    if system_prompt:
+        dialog.append({"role": "system", "content": system_prompt})
 
     while True:
         # if we're interactive and no prompt is provided, prompt user.
@@ -173,17 +174,18 @@ def lm(
                     prompt = input("> ")
                     if prompt:
                         break
-                if prompt.lower() in ("exit", "quit", "stop", "q", "x", ":q"):
+                if prompt.lower() in ("exit", "quit", "stop", "q", "x", ":q", ":q!"):
                     break
+
+            # Add the user's most recent prompt to the dialog
+            # note this is done before the prompt is modified by the template
+            dialog.append({"role": "user", "content": prompt})
 
             # Apply the prompt prefix/postfix
             if user_prefix_prompt:
                 prompt = user_prefix_prompt + "\n\n" + prompt
             if user_postfix_prompt:
                 prompt += "\n\n" + user_postfix_prompt
-
-            # Add the user's most recent prompt to the dialog
-            dialog.append({"role": "user", "content": prompt})
 
             # query chatgpt
             response_content_raw = query_chatgpt(dialog, model=model)

@@ -1,5 +1,4 @@
 import logging
-import os
 
 import coloredlogs
 
@@ -22,9 +21,6 @@ DEFAULT_EDITOR = "vi"
 # Internal
 LOGLEVEL = logging.DEBUG if DEBUG else logging.ERROR
 LOGLEVEL_LIB = logging.ERROR if DEBUG else logging.CRITICAL
-DEFAULT_SYSTEM_PROMPT_PATH = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "prompts", "system.jinja2"
-)
 if DEBUG:
     coloredlogs.install(
         fmt="%(asctime)s.%(msecs)03d %(hostname)s[%(process)d] "
