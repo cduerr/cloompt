@@ -27,7 +27,9 @@ def context_load() -> list:
     return []
 
 
-def context_save(dialog, prune_system_prompt: bool = False):
+def context_save(dialog_, prune_system_prompt: bool = False):
+    dialog = dialog_.copy()
+
     if prune_system_prompt:
         dialog.pop(0)
     while len(dialog) > MAX_DIALOG_LENGTH:

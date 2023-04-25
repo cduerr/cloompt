@@ -19,14 +19,16 @@ except Exception:  # noqa
     shell_name = "bash"
 
 
-def get_prompt(prompt: Optional[str] = None, suffix: Optional[str] = "") -> str:
-    if not prompt:
+def get_prompt(
+    prompt_template: Optional[str] = None, suffix: Optional[str] = ""
+) -> str:
+    if not prompt_template:
         return ""
 
-    user_prefix_prompt_path = (
-        os.path.join(prompt_folder, f"{prompt}{suffix}.jinja2") if prompt else None
+    user_prefix_prompt_path = os.path.join(
+        prompt_folder, f"{prompt_template}{suffix}.jinja2"
     )
-    if user_prefix_prompt_path and os.path.exists(user_prefix_prompt_path):
+    if os.path.exists(user_prefix_prompt_path):
         cwd = os.getcwd()
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         env = Environment(loader=FileSystemLoader("/"))
@@ -38,13 +40,13 @@ def get_prompt(prompt: Optional[str] = None, suffix: Optional[str] = "") -> str:
     return ""
 
 
-def get_user_prefix_prompt(prompt: Optional[str] = None) -> str:
-    return get_prompt(prompt, ".prefix")
+def get_user_prefix_prompt(prompt_template: Optional[str] = None) -> str:
+    return get_prompt(prompt_template, ".prefix")
 
 
-def get_user_postfix_prompt(prompt: Optional[str] = None) -> str:
-    return get_prompt(prompt, ".postfix")
+def get_user_postfix_prompt(prompt_template: Optional[str] = None) -> str:
+    return get_prompt(prompt_template, ".postfix")
 
 
-def get_system_prompt(prompt: Optional[str] = "system") -> str:
-    return get_prompt(prompt)
+def get_system_prompt(prompt_template: Optional[str] = None) -> str:
+    return get_prompt(prompt_template)

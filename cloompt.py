@@ -51,7 +51,19 @@ logging.getLogger("openai").setLevel(LOGLEVEL_LIB)
     is_flag=True,
     help="Interactive mode. (Implies --contextual, ignores --no-context)",
 )
-@click.option("-m", "--model", default=OPENAI_DEFAULT_MODEL, help="Model to use.")
+@click.option(
+    "-m",
+    "--model",
+    default=OPENAI_DEFAULT_MODEL,
+    help="Model to use (defaults to 'gpt-3.5-turbo').",
+)
+@click.option(
+    "--temp",
+    "--temperature",
+    "temperature",
+    default=1.0,
+    help="Temperature (defaults to 1.0).",
+)
 @click.option("--list-styles", is_flag=True, help="List available pygments styles.")
 @click.option("--no-color", "no_color", is_flag=True, help="Disable color output.")
 @click.option(
@@ -78,13 +90,14 @@ logging.getLogger("openai").setLevel(LOGLEVEL_LIB)
     "--template",
     "--proompt",
     "prompt_template",
+    default="system",
     required=False,
     help="Prompt template (defaults to 'system')",
 )
 @click.option(
     "--no-template",
     "--no-proompt",
-    "no_proompt",
+    "no_prompt_template",
     is_flag=True,
     help="Disable prompt templates (overrides -t).",
 )
@@ -95,7 +108,7 @@ logging.getLogger("openai").setLevel(LOGLEVEL_LIB)
     is_flag=True,
     help="code formatter- strips non-code from output when possible",
 )
-@click.argument("prompt", required=False)
+@click.argument("prompt", required=False, default="")
 @cli_error_handler
 @require_openai_api_key
 def lm(
@@ -103,6 +116,7 @@ def lm(
     editor,
     interactive,
     model,
+    temperature,
     list_styles,
     no_color,
     style,
@@ -110,15 +124,17 @@ def lm(
     no_context,
     reset_context,
     prompt_template,
-    no_proompt,
+    no_prompt_template,
     fmt_code,
     prompt,
 ):
     """cloompt - the cli proompter"""
-    prompt = prompt.strip() if (prompt and not no_proompt) else ""
+    prompt = prompt.strip()
+    prompt_template = prompt_template.strip() if not no_prompt_template else ""
     style = style or DEFAULT_PYGMENTS_STYLE
     no_color = no_color if sys.stdout.isatty() else True
     contextual = (contextual and not no_context) or interactive
+    temperature = float(temperature)
     dialog = []
 
     # maintenance 1 in 10 runs (randomly)
@@ -161,7 +177,7 @@ def lm(
     # Load the prompt templates (proompts)
     user_prefix_prompt = get_user_prefix_prompt(prompt_template)
     user_postfix_prompt = get_user_postfix_prompt(prompt_template)
-    system_prompt = get_system_prompt(prompt_template or "system")
+    system_prompt = get_system_prompt(prompt_template)
     if system_prompt:
         dialog.append({"role": "system", "content": system_prompt})
 
@@ -188,14 +204,16 @@ def lm(
                 prompt += "\n\n" + user_postfix_prompt
 
             # query chatgpt
-            response_content_raw = query_chatgpt(dialog, model=model)
+            response_content_raw = query_chatgpt(
+                dialog, model=model, temperature=temperature
+            )
 
             # add the response to the dialog
             dialog.append({"role": "assistant", "content": response_content_raw})
 
             # save the context
             if contextual:
-                context_save(dialog, not no_proompt)
+                context_save(dialog, not no_prompt_template)
 
             # format the response
             if fmt_code:
