@@ -33,7 +33,7 @@ The instructions will make the following commands (functions) available:
 
 # To install with pipenv (recommended):
 # First, be sure to place the cloompt/ folder where you'd like it to live permanently.
-$ cd /path/to/cloompt
+$ cd /path/to/where/you/cloned/cloompt
 $ pipenv install
 
 # Copy/symlink the fish functions in config/fish/functions/ to ~/.config/fish/functions/
@@ -50,9 +50,9 @@ $ cp config/cloompt/proompts/* ~/.config/cloompt/proompts/
 # Export your OPENAI_API_KEY
 $ set -Ux OPENAI_API_KEY=sk...
 
-# Enable conversation/context by default, and tweak your default options as you'd like.
+# Optional: enable conversation/context by default, and tweak your default options 
+# as you'd like.
 $ set -Ux CLOOMPT_OPTIONS "-c"
-
 
 $ lm --help # to see all options
 ```
@@ -74,10 +74,12 @@ Template params:
 - `shell`: user's shell (e.g., `fish`)
 - `platform`: user's platform (e.g., `Darwin`)
 
+By default, the `system` proompt will be used. This is a system prompt 
+engineering for general CLI assistance. You may safely delete or replace it.
+
 ---
 
 ### Context Dialogs / Conversations
 
 Context (dialogs) are saved to ~/.config/cloompt/context/  and maintained automatically. 
 Use `--reset` to flush the current session context.
-

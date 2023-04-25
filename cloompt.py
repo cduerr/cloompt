@@ -79,7 +79,7 @@ logging.getLogger("openai").setLevel(LOGLEVEL_LIB)
     "--proompt",
     "prompt_template",
     required=False,
-    help="Prompt template.",
+    help="Prompt template (defaults to 'system')",
 )
 @click.option(
     "--no-template",
