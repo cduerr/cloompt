@@ -32,6 +32,7 @@ Generate a git commit message:
 Write code:
 
 `$ lm -x "write a Java program that displays the current time"`
+
 `$ lm -t code -x "Perl program that translate C to Pascal" > translator.pl`
 
 Explain code:
