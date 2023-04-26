@@ -11,6 +11,7 @@ shellingham = "*"
 jinja2 = "*"
 pygments = "*"
 psutil = "*"
+termcolor = "*"
 
 [dev-packages]
 

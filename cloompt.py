@@ -17,6 +17,7 @@ from services.context import (
     context_reset,
     context_load,
     context_save,
+    dialog_print,
 )
 from services.editor import edit_string
 from services.formatters.code import CodeFormatter
@@ -41,9 +42,7 @@ logging.getLogger("openai").setLevel(LOGLEVEL_LIB)
 
 
 @click.command()
-@click.option(
-    "-h", "--help", "help_", is_flag=True, help="Show extended help and exit."
-)
+@click.option("-h", "--help", "help_", is_flag=True, help="Show this help.")
 @click.option("-e", "--editor", is_flag=True, help="Open $EDITOR to edit prompt.")
 @click.option(
     "-i",
@@ -79,11 +78,15 @@ logging.getLogger("openai").setLevel(LOGLEVEL_LIB)
     help="Disable context for conversation (overrides -c).",
 )
 @click.option(
-    "--reset",
-    "--reset-context",
-    "reset_context",
-    is_flag=True,
-    help="Reset context and exit.",
+    "--history",
+    default=None,
+    is_flag=False,
+    flag_value="text",
+    required=False,
+    help="Show context history. Use `--history json` to show as json.",
+)
+@click.option(
+    "--reset", "--reset-context", "reset_context", is_flag=True, help="Reset context."
 )
 @click.option(
     "-t",
@@ -92,7 +95,7 @@ logging.getLogger("openai").setLevel(LOGLEVEL_LIB)
     "prompt_template",
     default="system",
     required=False,
-    help="Prompt template (defaults to 'system')",
+    help="Prompt template name (defaults to 'system')",
 )
 @click.option(
     "--no-template",
@@ -122,6 +125,7 @@ def lm(
     style,
     contextual,
     no_context,
+    history,
     reset_context,
     prompt_template,
     no_prompt_template,
@@ -135,6 +139,7 @@ def lm(
     no_color = no_color if sys.stdout.isatty() else True
     contextual = (contextual and not no_context) or interactive
     temperature = float(temperature)
+    history = history.lower() if history else None
     dialog = []
 
     # maintenance 1 in 10 runs (randomly)
@@ -154,12 +159,21 @@ def lm(
     if list_styles:
         display_style_grid()
 
+    # show context history
+    if history:
+        dialog_print(
+            context_load(),
+            as_json=(history == "json"),
+            enable_color=not no_color,
+            style=style,
+        )
+
     # reset context if requested and in contextual mode
     if reset_context:
         info("Context reset." if context_reset() else "No context to reset.")
 
     # exit if no prompt is provided and one of reset, list_styles, or help specified
-    if not prompt and (reset_context or list_styles or help_):
+    if not prompt and (reset_context or list_styles or help_ or history):
         sys.exit(0)
 
     # invoke editor
@@ -187,7 +201,7 @@ def lm(
             if interactive and not prompt:
                 # Read user input from console (ignore empty lines)
                 while True:
-                    prompt = input("> ")
+                    prompt = input("> ").strip()
                     if prompt:
                         break
                 if prompt.lower() in ("exit", "quit", "stop", "q", "x", ":q", ":q!"):
@@ -213,7 +227,7 @@ def lm(
 
             # save the context
             if contextual:
-                context_save(dialog, not no_prompt_template)
+                context_save(dialog)
 
             # format the response
             if fmt_code:
