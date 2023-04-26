@@ -103,5 +103,10 @@ engineering for general CLI assistance. You may safely delete or replace it.
 
 ### Context Dialogs / Conversations
 
-Context (dialogs) are saved to ~/.config/cloompt/context/  and maintained automatically. 
+Context (dialogs) are saved to ~/.config/cloompt/context/  and maintained (pruned) 
+automatically. System prompts are not saved to context.
+
+Use `--history` to view the current session context, or `--history=json` to view the
+context as JSON.
+
 Use `--reset` to flush the current session context.
