@@ -29,6 +29,7 @@ from services.proompt import (
     get_system_prompt,
     get_user_postfix_prompt,
     get_user_prefix_prompt,
+    get_prompt_override,
 )
 from utils.decorators import cli_error_handler, require_openai_api_key
 from utils.errors import PromptNotProvidedError
@@ -72,6 +73,7 @@ logging.getLogger("openai").setLevel(LOGLEVEL_LIB)
     "-c", "--contextual", is_flag=True, help="Maintain context for conversation."
 )
 @click.option(
+    "-C",
     "--no-context",
     "no_context",
     is_flag=True,
@@ -98,11 +100,40 @@ logging.getLogger("openai").setLevel(LOGLEVEL_LIB)
     help="Prompt template name (defaults to 'system')",
 )
 @click.option(
+    "-T",
     "--no-template",
     "--no-proompt",
     "no_prompt_template",
     is_flag=True,
-    help="Disable prompt templates (overrides -t).",
+    help="Disable prompt templates (overrides -t only).",
+)
+@click.option(
+    "-p",
+    "--system-proompt",
+    "system_prompt_override",
+    default="",
+    required=False,
+    help="<path> or <str> System prompt file or string override."
+    " (overrides --template for system prompt only)",
+)
+@click.option(
+    "--prefix",
+    "--prefix-proompt",
+    "prefix_prompt_override",
+    default="",
+    required=False,
+    help="<path> or <str> Prefix prompt file or string override."
+    " (overrides --template for prefix prompt only)",
+)
+@click.option(
+    "--postfix",
+    "--suffix",
+    "--postfix-proompt",
+    "postfix_prompt_override",
+    default="",
+    required=False,
+    help="<path> or <str> Postfix (user suffix) prompt file or string override."
+    " (overrides --template for postfix prompt only)",
 )
 @click.option(
     "-x",
@@ -129,6 +160,9 @@ def lm(
     reset_context,
     prompt_template,
     no_prompt_template,
+    system_prompt_override,
+    prefix_prompt_override,
+    postfix_prompt_override,
     fmt_code,
     prompt,
 ):
@@ -192,6 +226,17 @@ def lm(
     user_prefix_prompt = get_user_prefix_prompt(prompt_template)
     user_postfix_prompt = get_user_postfix_prompt(prompt_template)
     system_prompt = get_system_prompt(prompt_template)
+
+    # Load the proompt overrides (system, prefix, postfix prompts)
+    # Load from file if these are valid paths, otherwise treat as strings.
+    if system_prompt_override:
+        system_prompt = get_prompt_override(system_prompt_override).strip()
+    if prefix_prompt_override:
+        user_prefix_prompt = get_prompt_override(prefix_prompt_override).strip()
+    if postfix_prompt_override:
+        user_postfix_prompt = get_prompt_override(postfix_prompt_override).strip()
+
+    # Add system prompt to the dialog
     if system_prompt:
         dialog.append({"role": "system", "content": system_prompt})
 

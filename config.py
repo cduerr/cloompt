@@ -2,12 +2,13 @@ import logging
 
 import coloredlogs
 
+# Dev
+DEBUG = False
+
 # App
 APP_NAME = "cloompt"
-APP_DESCRIPTION = "a cli proompter"
 
 # Not-yet user-configurable
-DEBUG = False
 OPENAI_REQUEST_TIMEOUT = 60
 OPENAI_READ_TIMEOUT = 60
 MAX_DIALOG_LENGTH = 6

@@ -23,21 +23,27 @@ It's another CLI interface for OpenAI's ChatGPT with a couple bells and whistles
 
 Talk to ChatGPT:
 
-`$ lm "What is the meaning of life?"`
+`lm "What is the meaning of life?"`
 
 Generate a git commit message:
 
-`$ echo "$(git diff HEAD | sed 1,2d)" | lm -t commit --no-context`
+```bash
+echo "$(git diff HEAD | sed 1,2d)" | lm -t commit --no-context  # using the `commit` proompt, OR:
+echo "$(git diff HEAD | sed 1,2d)" | lm -p "Generate a brief commit message for provided git diff."  # specify the prompt directly
+```
 
 Write code:
 
-`$ lm -x "write a Java program that displays the current time"`
+`lm -x "write a Java program that displays the current time"`
 
-`$ lm -t code -x "Perl program that translate C to Pascal" > translator.pl`
+`lm -t code -x "Perl program that translate C to Pascal" > translator.pl`
 
 Explain code:
 
-`$ cat translator.pl | lm -t explain`
+```bash
+cat translator.pl | lm -t explain  # using the `explain` proompt, OR:
+cat translator.pl | lm -p "Explain this program to me."  # specify the prompt directly
+````
 
 ---
 
