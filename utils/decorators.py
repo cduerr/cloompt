@@ -7,7 +7,11 @@ from jinja2.exceptions import TemplateNotFound
 
 from services.output import exception, warning, error
 from config import DEBUG
-from utils.errors import PromptNotProvidedError, OpenAPIKeyNotFoundError
+from utils.errors import (
+    PromptNotProvidedError,
+    OpenAPIKeyNotFoundError,
+    PromptTooLongError,
+)
 
 
 # decorator to wrap cli calls for error handling
@@ -16,6 +20,10 @@ def cli_error_handler(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+        except PromptTooLongError as e:
+            exception(e)
+            warning("Prompt too long.")
+            sys.exit(7)
         except PromptNotProvidedError as e:
             exception(e)
             warning("No prompt provided.")

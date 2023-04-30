@@ -103,7 +103,7 @@ Template params:
 - `platform`: user's platform (e.g., `Darwin`)
 
 By default, the `system` proompt will be used. This is a system prompt 
-engineering for general CLI assistance. You may safely delete or replace it.
+engineered for general CLI assistance. You may safely delete or replace it.
 
 ---
 

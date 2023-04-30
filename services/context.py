@@ -6,9 +6,15 @@ import psutil
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from termcolor import cprint
+import tiktoken
 
 import config
-from config import PRUNE_CONTEXT_AFTER_DAYS, MAX_DIALOG_LENGTH, APP_NAME
+from config import (
+    PRUNE_CONTEXT_AFTER_DAYS,
+    APP_NAME,
+    OPENAI_DEFAULT_MODEL,
+    MAX_HISTORY_MESSAGE_COUNT,
+)
 from services.formatters.formatter import Formatter
 from services.output import debug
 
@@ -52,6 +58,26 @@ def dialog_print(
                 print(f"{role}: {content}")
 
 
+def token_count(prompt: str, model_name: str = OPENAI_DEFAULT_MODEL) -> int:
+    enc = tiktoken.encoding_for_model(model_name)
+    return len(enc.encode(prompt))
+
+
+def dialog_token_count(dialog: list[dict], model_name: str = OPENAI_DEFAULT_MODEL):
+    dialog_json = json.dumps(dialog)
+    t_count = 0
+    for message in dialog:
+        content = message.get("content")
+        role = message.get("role")
+        # Just counting the message length seems to be off, so we tack on
+        # roles and brace count (which is still wrong, but closer- I think)
+        t_count += token_count(content, model_name=model_name)
+        t_count += token_count(role, model_name=model_name)
+    t_count += dialog_json.count("{")
+    t_count += dialog_json.count("}")
+    return t_count
+
+
 def context_reset() -> bool:
     if os.path.exists(context_file):
         os.remove(context_file)
@@ -72,13 +98,14 @@ def context_save(dialog_):
     # remove system messages
     dialog = [message for message in dialog if message.get("role") != "system"]
 
-    while len(dialog) > MAX_DIALOG_LENGTH:
-        dialog.pop(0)
+    # truncate dialog to max history message count
+    dialog = dialog[-MAX_HISTORY_MESSAGE_COUNT:]
+
+    # save dialog to file
     if not os.path.exists(os.path.dirname(context_file)):
         os.makedirs(os.path.dirname(context_file))
     with open(context_file, "w") as f:
-        json.dump(dialog, f, indent=4)
-    return dialog
+        json.dump(dialog, f)
 
 
 def context_prune_all() -> None:

@@ -11,6 +11,7 @@ from config import (
     LOGLEVEL,
     LOGLEVEL_LIB,
     HELP_ADDENDUM,
+    OPENAI_MAX_TOKENS,
 )
 from services.context import (
     context_prune_all,
@@ -18,13 +19,14 @@ from services.context import (
     context_load,
     context_save,
     dialog_print,
+    token_count,
 )
 from services.editor import edit_string
 from services.formatters.code import CodeFormatter
 from services.formatters.default import DefaultFormatter
 from services.formatters.formatter import display_style_grid
 from services.llm import query_chatgpt
-from services.output import info, error, exception
+from services.output import info, error, exception, warning
 from services.proompt import (
     get_system_prompt,
     get_user_postfix_prompt,
@@ -32,7 +34,7 @@ from services.proompt import (
     get_prompt_override,
 )
 from utils.decorators import cli_error_handler, require_openai_api_key
-from utils.errors import PromptNotProvidedError
+from utils.errors import PromptNotProvidedError, PromptTooLongError
 
 import click
 
@@ -252,22 +254,29 @@ def lm(
                 if prompt.lower() in ("exit", "quit", "stop", "q", "x", ":q", ":q!"):
                     break
 
-            # Add the user's most recent prompt to the dialog
-            # note this is done before the prompt is modified by the template
-            dialog.append({"role": "user", "content": prompt})
-
             # Apply the prompt prefix/postfix
+            modified_prompt = prompt
             if user_prefix_prompt:
-                prompt = user_prefix_prompt + "\n\n" + prompt
+                modified_prompt = user_prefix_prompt + "\n\n" + prompt
             if user_postfix_prompt:
-                prompt += "\n\n" + user_postfix_prompt
+                modified_prompt += "\n\n" + user_postfix_prompt
+
+            # ensure the prompt <= OPENAI_MAX_TOKENS
+            t_count = token_count(modified_prompt, model_name=model)
+            if t_count > OPENAI_MAX_TOKENS:
+                if not interactive:
+                    raise PromptTooLongError()
+                else:
+                    warning(f"Prompt too long ({t_count} tokens > {OPENAI_MAX_TOKENS})")
+                    continue
 
             # query chatgpt
             response_content_raw = query_chatgpt(
-                dialog, model=model, temperature=temperature
+                modified_prompt, dialog, model=model, temperature=temperature
             )
 
-            # add the response to the dialog
+            # Add the (unmodified) prompt and response to the dialog
+            dialog.append({"role": "user", "content": prompt})
             dialog.append({"role": "assistant", "content": response_content_raw})
 
             # save the context

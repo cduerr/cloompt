@@ -4,3 +4,7 @@ class PromptNotProvidedError(Exception):
 
 class OpenAPIKeyNotFoundError(Exception):
     pass
+
+
+class PromptTooLongError(Exception):
+    pass

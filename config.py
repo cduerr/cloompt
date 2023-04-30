@@ -1,7 +1,5 @@
 import logging
 
-import coloredlogs
-
 # Dev
 DEBUG = False
 
@@ -11,10 +9,12 @@ APP_NAME = "cloompt"
 # Not-yet user-configurable
 OPENAI_REQUEST_TIMEOUT = 60
 OPENAI_READ_TIMEOUT = 60
-MAX_DIALOG_LENGTH = 6
+OPENAI_MAX_TOKENS = 4096
+MAX_HISTORY_MESSAGE_COUNT = 500
+MAX_DIALOG_REQUEST_SIZE = 20
 PRUNE_CONTEXT_AFTER_DAYS = 10
 
-# CLI-Configurable
+# CLI/ENV Configurable
 DEFAULT_PYGMENTS_STYLE = "monokai"
 OPENAI_DEFAULT_MODEL = "gpt-3.5-turbo"
 DEFAULT_EDITOR = "vi"
@@ -23,6 +23,8 @@ DEFAULT_EDITOR = "vi"
 LOGLEVEL = logging.DEBUG if DEBUG else logging.ERROR
 LOGLEVEL_LIB = logging.ERROR if DEBUG else logging.CRITICAL
 if DEBUG:
+    import coloredlogs
+
     coloredlogs.install(
         fmt="%(asctime)s.%(msecs)03d %(hostname)s[%(process)d] "
         "%(message)s %(name)s %(levelname)s"  # noqa
